@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>Gamer Hub 2.0 – Conecte-se, jogue e evolua</title>
+  <link rel="shortcut icon" type="image/png" href="Logo.png">
+
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Acrescentando o CSS e JavaScript no Site -->
+  <link rel="stylesheet" href="Custom.css">
+  <script src="Fluxo.js" defer></script>
+
+</head>
+<body>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ===== LIKES MODAL ===== -->
+  <div class="likes-modal" id="likesModal">
+    <div class="modal-box">
+      <button class="close-btn" id="closeLikesModal">✕</button>
+      <h3 id="likesModalTitle">Quem curtiu</h3>
+      <div id="likesList"></div>
+    </div>
+  </div>
+
+  <!-- ===== FILTER MODAL ===== -->
+  <div class="filter-modal" id="filterModal">
+    <div class="filter-box">
+      <h3>🔎 Filtros de /Conteúdo</h3>
+      <label>Buscar</label><input type="text" id="filterSearch" placeholder="Palavra-chave" />
+      <label>Jogo / Gênero</label><select id="filterGenre"><option value="">Todos</option></select>
+      <label>Plataforma</label><select id="filterPlatform"><option value="">Todas</option><option value="PC">PC</option><option value="PlayStation">PlayStation</option><option value="Xbox">Xbox</option><option value="Nintendo">Nintendo</option><option value="Mobile">Mobile</option></select>
+      <label>Distância máxima (km)</label><input type="number" id="filterDistance" placeholder="Ex: 10" min="0" />
+      <div class="filter-actions">
+        <button class="btn-outline" id="filterClearBtn">Limpar</button>
+        <button class="btn-neon" id="filterApplyBtn">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button class="theme-toggle-btn" id="sidebarCloseBtn" style="font-size:24px;">✕</button>
+    </div>
+    <div class="sidebar-brand"><span>Gamer</span><span>Hub</span> <small>2.0</small></div>
+    <div class="sidebar-section">
+      <h4>Principal</h4>
+      <button class="nav-item active" data-page="home"><span class="icon">🏠</span> Home</button>
+      <button class="nav-item" data-page="feed"><span class="icon">📰</span> Feed</button>
+      <button class="nav-item" data-page="explore"><span class="icon">🔍</span> Explore</button>
+      <button class="nav-item" data-page="matchmaking"><span class="icon">🎯</span> Jogadores</button>
+      <button class="nav-item" data-page="lfg"><span class="icon">📢</span> LFG</button>
+      <button class="nav-item" data-page="squads"><span class="icon">⚔️</span> Squads</button>
+      <button class="nav-item" data-page="lobby"><span class="icon">🛋️</span> Lobby</button>
+      <button class="nav-item" data-page="chat"><span class="icon">💬</span> Chat <span class="badge" id="chatBadge">0</span></button>
+    </div>
+    <div class="sidebar-section">
+      <h4>Comunidade</h4>
+      <button class="nav-item" data-page="communities"><span class="icon">🌍</span> Comunidades</button>
+      <button class="nav-item" data-page="groups"><span class="icon">👥</span> Grupos</button>
+      <button class="nav-item" data-page="friends"><span class="icon">🤝</span> Amigos</button>
+      <button class="nav-item" data-page="tournaments"><span class="icon">🏆</span> Torneios</button>
+    </div>
+    <div class="sidebar-section">
+      <h4>Progresso</h4>
+      <button class="nav-item" data-page="rankings"><span class="icon">📊</span> Ranking</button>
+      <button class="nav-item" data-page="badges"><span class="icon">🏅</span> Conquistas</button>
+      <button class="nav-item" data-page="challenges"><span class="icon">⚡</span> Desafios</button>
+      <button class="nav-item" data-page="seasons"><span class="icon">📅</span> Temporadas</button>
+      <button class="nav-item" data-page="hubpass"><span class="icon">🎫</span> Hub Pass</button>
+    </div>
+    <div class="sidebar-section">
+      <h4>Extras</h4>
+      <button class="nav-item" data-page="clips"><span class="icon">🎬</span> Clips</button>
+      <button class="nav-item" data-page="guides"><span class="icon">📚</span> Guias</button>
+      <button class="nav-item" data-page="minigames"><span class="icon">🕹️</span> Mini Games</button>
+      <button class="nav-item" data-page="games"><span class="icon">🎮</span> Games</button>
+      <button class="nav-item" data-page="shop"><span class="icon">🛒</span> Loja</button>
+      <button class="nav-item" data-page="ai"><span class="icon">🤖</span> Gamer Hub AI</button>
+    </div>
+    <div class="sidebar-section">
+      <h4>Conta</h4>
+      <button class="nav-item" data-page="profile"><span class="icon">👤</span> Perfil</button>
+      <button class="nav-item" data-page="settings"><span class="icon">⚙️</span> Configurações</button>
+      <button class="nav-item" data-page="notifications"><span class="icon">🔔</span> Notificações <span id="notifCount">0</span></button>
+      <button class="nav-item" data-page="admin" style="display:none;"><span class="icon">🔧</span> Admin</button>
+    </div>
+    <div class="sidebar-appearance">
+      <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:4px;padding-left:4px;">🎨 Aparência</h4>
+      <div class="app-item"><span class="emoji-icon">🌓</span> Tema <select id="themeSelectSidebar"><option value="dark">Escuro</option><option value="light">Claro</option></select><button class="theme-toggle-btn" id="themeToggleSidebar" title="Alternar tema">🌙</button></div>
+      <div class="app-item" style="flex-wrap:wrap;"><span class="emoji-icon">🎵</span> Música <select id="playlistSelectSidebar" style="flex:1;min-width:120px;"><option value="37i9dQZF1DX0FOF1IUWK1W">🎶 Top Brasil</option><option value="37i9dQZF1DX9FSYmdU9mbT">🇧🇷 MPB</option><option value="37i9dQZF1DWWY64wDtewQt">🔊 Phonk</option><option value="37i9dQZF1EQpj7X7UK8OOF">🎸 Rock</option><option value="3rPugprs5WtLcNH1VqXJDx">🔥 Trap 2026🇧🇷</option><option value="37i9dQZF1DWWQRwui0ExPn">🌙 Lo-fi</option><option value="37i9dQZF1DX186v583rmzp">🎤 90s Hip-Hop</option><option value="37i9dQZF1E8M7hCxGxmnna">🎺 Jazz</option></select></div>
+      <iframe id="musicFrameSidebar" class="music-frame" allow="autoplay;clipboard-write;encrypted-media;fullscreen;picture-in-picture"></iframe>
+    </div>
+    <div class="sidebar-filters">
+      <h4 style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:4px;padding-left:4px;">🔎 Filtros</h4>
+      <div class="filter-item"><button class="btn-outline" id="openFiltersBtn" style="width:100%;text-align:center;">Abrir Filtros</button></div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-meta"><strong id="sidebarUsername">Carregando...</strong><br /><span id="sidebarNexus">#----</span></div>
+      <button class="btn-outline w-full" id="logoutBtn" style="font-size:13px;padding:6px;">Sair</button>
+    </div>
+  </aside>
+
+  <!-- ===== MENU HAMBURGUER ===== -->
+  <button class="menu-toggle" id="menuToggle">☰</button>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main" id="mainContent">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <h2 class="glow-text">🏠 Bem-vindo, <span id="homeUsername">Gamer</span>!</h2>
+      <div class="dashboard-grid">
+        <div class="dashboard-card"><div class="card-title">👤 Perfil</div><div><span class="highlight" id="homeDisplayName">---</span></div><div class="text-muted" id="homeNexus">#----</div><div>Nível <span id="homeLevel">1</span> • XP <span id="homeXP">0</span></div><div class="xp-bar"><div class="fill" id="homeXpBar" style="width:0%;"></div></div><div class="flex gap-2 mt-4"><span>🪙 <span id="homeCoins">0</span></span><span>⭐ <span id="homeRep">0</span></span></div></div>
+        <div class="dashboard-card"><div class="card-title">🎮 Jogadores Online</div><div><span class="highlight" id="homeOnlineCount">0</span></div><div class="text-muted">conectados agora</div><button class="btn-outline mt-4" onclick="navigateTo('matchmaking')">Ver todos</button></div>
+        <div class="dashboard-card"><div class="card-title">🏆 Desafios</div><div id="homeMissions">Carregando...</div></div>
+        <div class="dashboard-card"><div class="card-title">📢 LFG Ativo</div><div id="homeLfg">Nenhum LFG ativo.</div></div>
+        <div class="dashboard-card"><div class="card-title">⚔️ Squad</div><div id="homeSquad">Nenhum squad.</div></div>
+        <div class="dashboard-card"><div class="card-title">🔔 Notificações</div><div id="homeNotifs">Nenhuma.</div></div>
+      </div>
+    </div>
+
+    <!-- FEED -->
+    <div class="page" id="page-feed">
+      <h2 class="glow-text">📰 Feed da Comunidade</h2>
+      <div class="post-composer">
+        <textarea id="postInput" placeholder="O que você está jogando? Compartilhe com a galera..." rows="2"></textarea>
+        <div class="actions">
+          <div>
+            <button class="btn-outline" id="addImageBtn" style="font-size:12px;padding:4px 12px;">📷 Imagem</button>
+            <button class="btn-outline" id="addPollBtn" style="font-size:12px;padding:4px 12px;">📊 Enquete</button>
+            <select id="feedGameFilter" style="padding:4px 8px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:6px;color:var(--text-primary);font-size:12px;"><option value="">Todos os gêneros</option></select>
+          </div>
+          <button class="btn-neon" id="postSubmitBtn">Publicar</button>
+        </div>
+      </div>
+      <div id="feedContainer"></div>
+    </div>
+
+    <!-- EXPLORE -->
+    <div class="page" id="page-explore">
+      <h2 class="glow-text">🔍 Explore</h2>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <input type="text" id="exploreSearch" placeholder="Pesquisar..." style="flex:1;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);min-width:160px;" />
+        <button class="btn-neon" id="exploreSearchBtn">Buscar</button>
+      </div>
+      <div class="explore-grid">
+        <div class="explore-item" onclick="navigateTo('matchmaking')"><div class="explore-icon">🎯</div><div>Jogadores</div></div>
+        <div class="explore-item" onclick="navigateTo('feed')"><div class="explore-icon">📰</div><div>Posts</div></div>
+        <div class="explore-item" onclick="navigateTo('clips')"><div class="explore-icon">🎬</div><div>Clips</div></div>
+        <div class="explore-item" onclick="navigateTo('games')"><div class="explore-icon">🎮</div><div>Jogos</div></div>
+        <div class="explore-item" onclick="navigateTo('groups')"><div class="explore-icon">👥</div><div>Grupos</div></div>
+        <div class="explore-item" onclick="navigateTo('squads')"><div class="explore-icon">⚔️</div><div>Squads</div></div>
+        <div class="explore-item" onclick="navigateTo('tournaments')"><div class="explore-icon">🏆</div><div>Torneios</div></div>
+        <div class="explore-item" onclick="navigateTo('guides')"><div class="explore-icon">📚</div><div>Guias</div></div>
+      </div>
+      <div id="exploreResults" class="mt-4"></div>
+    </div>
+
+    <!-- MATCHMAKING -->
+    <div class="page" id="page-matchmaking">
+      <h2 class="glow-text">🎯 Jogadores Online</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <input type="text" id="mmSearch" placeholder="Buscar por nome ou #ID" style="flex:1;min-width:160px;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);" />
+        <button class="btn-outline" id="mmFilterBtn" style="padding:8px 16px;">Filtros</button>
+      </div>
+      <div id="matchmakingContainer"></div>
+    </div>
+
+    <!-- LFG -->
+    <div class="page" id="page-lfg">
+      <h2 class="glow-text">📢 Procurando Jogadores (LFG)</h2>
+      <button class="btn-neon mb-4" id="createLfgBtn">+ Criar LFG</button>
+      <div id="lfgContainer"></div>
+    </div>
+
+    <!-- SQUADS -->
+    <div class="page" id="page-squads">
+      <h2 class="glow-text">⚔️ Squads</h2>
+      <button class="btn-neon mb-4" id="createSquadBtn">+ Criar Squad</button>
+      <div id="squadsContainer"></div>
+    </div>
+
+    <!-- LOBBY -->
+    <div class="page" id="page-lobby">
+      <h2 class="glow-text">🛋️ Lobby</h2>
+      <div id="lobbyContainer" class="lobby-container">
+        <p class="text-muted">Crie ou entre em um lobby para jogar com a galera.</p>
+        <button class="btn-neon" id="createLobbyBtn">Criar Lobby</button>
+        <div id="lobbyPlayers"></div>
+        <div id="lobbyChat" class="chat-window" style="height:200px;margin-top:16px;">
+          <div class="chat-messages" id="lobbyMessages" style="height:150px;overflow-y:auto;"></div>
+          <div class="chat-input-area">
+            <input type="text" id="lobbyChatInput" placeholder="Mensagem do lobby..." />
+            <button class="btn-neon" id="lobbyChatSend">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="page" id="page-chat">
+      <h2 class="glow-text">💬 Chat</h2>
+      <div class="chat-stats">
+        <div class="stat-item"><span class="num" id="statTotal">0</span><span class="label">Total</span></div>
+        <div class="stat-item"><span class="num" id="statUnread">0</span><span class="label">Não lidas</span></div>
+        <div class="stat-item"><span class="num" id="statReplied">0</span><span class="label">Respondidas</span></div>
+      </div>
+      <div class="chat-container">
+        <div class="chat-list" id="chatList"><div class="text-muted" style="padding:12px;">Carregando conversas...</div></div>
+        <div class="chat-window" id="chatWindow">
+          <div class="chat-header" id="chatHeader" style="display:none;">
+            <div style="display:flex;align-items:center;gap:8px;"><button class="chat-back-btn" id="chatBackBtn">←</button><span class="chat-title" id="chatTitle">Chat</span></div>
+            <button class="delete-chat-btn" id="deleteChatBtn" title="Excluir conversa (mensagens permanecem)">🗑️</button>
+          </div>
+          <div class="chat-messages" id="chatMessages"><div class="text-muted" style="padding:16px;">Selecione uma conversa</div></div>
+          <div class="chat-typing" id="chatTyping" style="display:none;">Alguém está digitando...</div>
+          <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Digite uma mensagem..." disabled>
+            <button class="btn-neon" id="chatSendBtn" disabled>Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMUNITIES -->
+    <div class="page" id="page-communities">
+      <h2 class="glow-text">🌍 Comunidades</h2>
+      <div id="communitiesContainer" class="grid-3"></div>
+    </div>
+
+    <!-- GROUPS -->
+    <div class="page" id="page-groups">
+      <h2 class="glow-text">👥 Grupos</h2>
+      <button class="btn-neon mb-4" id="createGroupBtn">+ Criar Grupo</button>
+      <div id="groupsContainer"></div>
+    </div>
+
+    <!-- FRIENDS -->
+    <div class="page" id="page-friends">
+      <h2 class="glow-text">🤝 Amigos</h2>
+      <p class="text-muted">Usuários que você segue e que também te seguem (amigos mútuos).</p>
+      <div id="friendsContainer"></div>
+    </div>
+
+    <!-- TOURNAMENTS -->
+    <div class="page" id="page-tournaments">
+      <h2 class="glow-text">🏆 Torneios</h2>
+      <button class="btn-neon mb-4" id="createTournamentBtn">+ Criar Torneio</button>
+      <div id="tournamentContainer"></div>
+    </div>
+
+    <!-- RANKINGS -->
+    <div class="page" id="page-rankings">
+      <h2 class="glow-text">📊 Ranking de Usuários</h2>
+      <div id="rankingsContainer"></div>
+    </div>
+
+    <!-- BADGES -->
+    <div class="page" id="page-badges">
+      <h2 class="glow-text">🏅 Conquistas</h2>
+      <div id="badgesContainer" class="flex gap-2 flex-wrap"></div>
+    </div>
+
+    <!-- CHALLENGES -->
+    <div class="page" id="page-challenges">
+      <h2 class="glow-text">⚡ Desafios</h2>
+      <div id="missionsContainer"></div>
+    </div>
+
+    <!-- SEASONS -->
+    <div class="page" id="page-seasons">
+      <h2 class="glow-text">📅 Temporadas</h2>
+      <div id="seasonsContainer"></div>
+    </div>
+
+    <!-- HUB PASS -->
+    <div class="page" id="page-hubpass">
+      <h2 class="glow-text">🎫 Hub Pass</h2>
+      <div id="hubpassContainer"></div>
+    </div>
+
+    <!-- CLIPS -->
+    <div class="page" id="page-clips">
+      <h2 class="glow-text">🎬 Gamer Clips</h2>
+      <button class="btn-neon mb-4" id="createClipBtn">+ Enviar Clip</button>
+      <div id="clipsContainer" class="grid-3"></div>
+    </div>
+
+    <!-- GUIDES -->
+    <div class="page" id="page-guides">
+      <h2 class="glow-text">📚 Guias</h2>
+      <button class="btn-neon mb-4" id="createGuideBtn">+ Criar Guia</button>
+      <div id="guidesContainer"></div>
+    </div>
+
+    <!-- MINI GAMES -->
+    <div class="page" id="page-minigames">
+      <h2 class="glow-text">🕹️ Mini Games</h2>
+      <div class="neon-card">
+        <h3>Adivinhe o Número</h3>
+        <p class="text-muted">Tente adivinhar o número entre 1 e 100.</p>
+        <input type="number" id="guessInput" placeholder="Seu palpite" style="padding:8px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);width:120px;" />
+        <button class="btn-neon" id="guessBtn">Palpitar</button>
+        <div id="guessResult" class="mt-4"></div>
+        <div class="text-muted">Recorde: <span id="guessRecord">0</span> tentativas</div>
+      </div>
+    </div>
+
+    <!-- GAMES -->
+    <div class="page" id="page-games">
+      <h2 class="glow-text">🎮 Catálogo de Games</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <select id="gameGenreFilter" style="padding:8px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);"><option value="">Todas categorias</option></select>
+      </div>
+      <div id="gamesContainer" class="grid-3"></div>
+      <h2 class="glow-text mt-4">📊 Ranking de Games</h2>
+      <div class="ranking-tabs" id="rankingTabs"></div>
+      <div id="rankingContent" class="neon-card"><p class="text-muted">Selecione um gênero ou ranking global.</p></div>
+    </div>
+
+    <!-- SHOP -->
+    <div class="page" id="page-shop">
+      <h2 class="glow-text">🛒 Loja – Paletas de Cores</h2>
+      <p class="text-muted">Compre novas paletas com suas moedas.</p>
+      <div id="shopContainer" class="grid-4 mt-4"></div>
+    </div>
+
+    <!-- GAMER HUB AI -->
+    <div class="page" id="page-ai">
+      <h2 class="glow-text">🤖 Gamer Hub AI</h2>
+      <p class="text-muted">Assistente inteligente para recomendações e ajuda.</p>
+      <div class="ai-chat" id="aiChat">
+        <div class="ai-message bot">👋 Olá! Como posso ajudar você hoje?</div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <input type="text" id="aiInput" placeholder="Pergunte algo..." style="flex:1;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;color:var(--text-primary);" />
+        <button class="btn-neon" id="aiSendBtn">Enviar</button>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+      <h2 class="glow-text">👤 Meu Perfil</h2>
+      <div class="profile-header">
+        <div class="big-avatar" id="profileAvatar">U</div>
+        <div style="flex:1;min-width:200px;">
+          <h3 id="profileName" style="font-size:24px;">Usuário</h3>
+          <div class="text-muted" id="profileNexus">#----</div>
+          <div class="profile-stats">
+            <div><div class="num" id="profileCoins">0</div><div class="label">Moedas</div></div>
+            <div><div class="num" id="profileXP">0</div><div class="label">XP</div></div>
+            <div><div class="num" id="profileLevel">1</div><div class="label">Nível</div></div>
+            <div><div class="num" id="profileRep">0</div><div class="label">Reputação</div></div>
+          </div>
+          <div class="xp-bar"><div class="fill" id="xpProgress" style="width:0%;"></div></div>
+          <div class="profile-stats" style="margin-top:8px;">
+            <div><div class="num" id="profileFollowers">0</div><div class="label">Seguidores</div></div>
+            <div><div class="num" id="profileFollowing">0</div><div class="label">Seguindo</div></div>
+          </div>
+          <div id="profileStatus" class="status-indicator status-online">Online</div>
+          <button class="btn-outline mt-4" id="editBioBtn" style="font-size:13px;padding:6px 16px;">✏️ Editar Bio</button>
+        </div>
+      </div>
+      <div class="neon-card"><h4>Bio</h4><p id="profileBio" class="text-muted">Nenhuma bio definida.</p></div>
+      <div class="grid-2 mt-4">
+        <div class="neon-card"><h4>🎮 Jogos Favoritos</h4><div id="profileGames" class="text-muted">Nenhum jogo adicionado.</div></div>
+        <div class="neon-card"><h4>🏅 Conquistas</h4><div id="profileBadges" class="text-muted">Nenhuma conquista ainda.</div></div>
+      </div>
+      <div class="grid-2 mt-4">
+        <div class="neon-card"><h4>👥 Seguindo (<span id="profileFollowingCount">0</span>)</h4><div id="profileFollowingList" class="follow-list"><span class="text-muted">Carregando...</span></div></div>
+        <div class="neon-card"><h4>👥 Seguidores (<span id="profileFollowersCount">0</span>)</h4><div id="profileFollowersList" class="follow-list"><span class="text-muted">Carregando...</span></div></div>
+      </div>
+      <div class="neon-card mt-4">
+        <h4>Privacidade</h4>
+        <label style="display:flex;align-items:center;gap:12px;margin-top:8px;"><input type="radio" name="visibility" value="public" /> Público</label>
+        <label style="display:flex;align-items:center;gap:12px;margin-top:4px;"><input type="radio" name="visibility" value="private" /> Privado</label>
+        <button class="btn-neon mt-4" id="saveVisibilityBtn">Salvar privacidade</button>
+      </div>
+      <button class="btn-danger mt-4" id="deleteAccountBtn" style="font-size:13px;padding:6px 16px;">🗑️ Excluir conta</button>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <h2 class="glow-text">⚙️ Configurações</h2>
+      <div class="neon-card">
+        <h4>Perfil</h4>
+        <label>Nome de exibição</label><input type="text" id="settingsDisplayName" class="admin-input" />
+        <label>Bio</label><textarea id="settingsBio" class="admin-input" rows="3"></textarea>
+        <label>Jogos favoritos (separados por vírgula)</label><input type="text" id="settingsGames" class="admin-input" placeholder="Ex: Valorant, CS2, Fortnite" />
+        <button class="btn-neon mt-4" id="settingsSaveBtn">Salvar alterações</button>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="page" id="page-notifications">
+      <h2 class="glow-text">🔔 Notificações</h2>
+      <button class="btn-outline mb-4" id="markAllReadBtn">Marcar todas como lidas</button>
+      <div id="notificationsContainer"></div>
+    </div>
+
+    <!-- MAP -->
+    <div class="page" id="page-map">
+      <h2 class="glow-text">🗺️ Encontrar Jogadores</h2>
+      <div class="map-wrapper">
+        <div id="map"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-outline" id="locateBtn">📍 Minha localização</button>
+          <button class="btn-outline" id="nearbyBtn">🔍 Jogadores próximos</button>
+        </div>
+        <div class="nearby-list" id="nearbyList"><div class="text-muted">Ative sua localização e clique em "Jogadores próximos".</div></div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="page" id="page-admin">
+      <h2 class="glow-text">🔧 Painel Admin</h2>
+      <p class="text-muted">Apenas administradores têm acesso a esta área.</p>
+      <div class="grid-2 mt-4">
+        <div class="neon-card">
+          <h4>🏅 Criar Conquista</h4>
+          <input type="text" id="adminBadgeName" placeholder="Nome" class="admin-input" />
+          <input type="text" id="adminBadgeDesc" placeholder="Descrição" class="admin-input" />
+          <input type="text" id="adminBadgeIcon" placeholder="Ícone (ex: 🏆)" class="admin-input" />
+          <select id="adminBadgeRarity" class="admin-select"><option value="Comum">Comum</option><option value="Raro">Raro</option><option value="Épico">Épico</option><option value="Lendário">Lendário</option></select>
+          <input type="number" id="adminBadgeXP" placeholder="XP" class="admin-input" />
+          <button class="btn-neon mt-4" id="adminCreateBadgeBtn">Criar</button>
+        </div>
+        <div class="neon-card">
+          <h4>⚡ Criar Desafio</h4>
+          <input type="text" id="adminMissionTitle" placeholder="Título" class="admin-input" />
+          <input type="text" id="adminMissionDesc" placeholder="Descrição" class="admin-input" />
+          <select id="adminMissionType" class="admin-select"><option value="daily">Diário</option><option value="weekly">Semanal</option><option value="permanent">Permanente</option></select>
+          <input type="number" id="adminMissionCoins" placeholder="Moedas" class="admin-input" />
+          <input type="number" id="adminMissionXP" placeholder="XP" class="admin-input" />
+          <input type="number" id="adminMissionTarget" placeholder="Alvo" class="admin-input" />
+          <button class="btn-neon mt-4" id="adminCreateMissionBtn">Criar</button>
+        </div>
+      </div>
+      <div class="neon-card mt-4">
+        <h4>📋 Gerenciar Games & Capas</h4>
+        <div class="flex gap-2" style="flex-wrap:wrap;">
+          <input type="text" id="adminGameName" placeholder="Nome do jogo" class="admin-input" style="flex:1;" />
+          <input type="text" id="adminGameGenre" placeholder="Gênero" class="admin-input" style="flex:1;" />
+          <button class="btn-neon" id="adminAddGameBtn">Adicionar</button>
+          <button class="btn-outline" id="adminFetchCoverBtn">🔎 Buscar capa</button>
+        </div>
+        <div id="adminCoverPreview" class="mt-4" style="display:none;"></div>
+        <div id="adminGameList" class="mt-4"></div>
+        <button class="btn-outline mt-4" id="adminMigrateCoversBtn">🔄 Atualizar capas dos jogos</button>
+        <div id="adminMigrateProgress" class="mt-2"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- ===== PROFILE MODAL ===== -->
+  <div class="profile-modal" id="profileModal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeProfileModal">✕</button>
+      <div id="profileModalContent"><div style="text-align:center;padding:20px;color:var(--text-secondary);">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- ===== MOBILE NAV ===== -->
+  <nav class="mobile-nav" id="mobileNav">
+    <button class="m-item active" data-page="home"><span class="icon">🏠</span>Home</button>
+    <button class="m-item" data-page="feed"><span class="icon">📰</span>Feed</button>
+    <button class="m-item" data-page="matchmaking"><span class="icon">🎯</span>Jogadores</button>
+    <button class="m-item" data-page="chat"><span class="icon">💬</span>Chat</button>
+    <button class="m-item" data-page="profile"><span class="icon">👤</span>Perfil</button>
+  </nav>
+
+  <!-- ===== AUTH ===== -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <h2><span>Gamer</span>Hub 2.0</h2>
+      <p class="sub">Faça login e conecte-se à comunidade gamer</p>
+      <div class="error" id="authError">Erro</div>
+      <div id="authForm">
+        <input type="email" id="authEmail" placeholder="Email" required />
+        <input type="password" id="authPassword" placeholder="Senha" required />
+        <button class="btn" id="authSubmitBtn">Entrar</button>
+        <button class="btn btn-google" id="googleAuthBtn" style="display:none;">🔵 Continuar com Google</button>
+        <div class="google-disabled">Login com Google indisponível no momento.</div>
+        <div class="toggle-auth" id="authToggle">Não tem conta? <a href="#">Criar uma</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       JAVASCRIPT OTIMIZADO – GAMER HUB 2.0
+       ============================================================ -->
+
+</body>
+</html>
